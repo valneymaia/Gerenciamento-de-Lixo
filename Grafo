@@ -1,0 +1,92 @@
+import heapq
+
+class Grafo:
+    def __init__(self):
+        self.adjacencias = {}
+
+    def adicionar_aresta(self, origem, destino, peso):
+        if origem not in self.adjacencias:
+            self.adjacencias[origem] = []
+        if destino not in self.adjacencias:
+            self.adjacencias[destino] = []
+        self.adjacencias[origem].append((destino, peso))
+        self.adjacencias[destino].append((origem, peso))
+
+    def carregar_arquivo(self, caminho_arquivo):
+        with open(caminho_arquivo, 'r') as arquivo:
+            for linha in arquivo:
+                origem, destino, peso = map(int, linha.strip().split())
+                self.adicionar_aresta(origem, destino, peso)
+
+    def dijkstra(self, origem):
+        distancias = {vertice: float('inf') for vertice in self.adjacencias}
+        anteriores = {vertice: None for vertice in self.adjacencias}  # Para reconstruir o caminho
+        distancias[origem] = 0
+        heap = [(0, origem)]  # (distância acumulada, vértice atual)
+
+        while heap:
+            dist_atual, vertice_atual = heapq.heappop(heap)
+            if dist_atual > distancias[vertice_atual]:
+                continue
+
+            for vizinho, peso in self.adjacencias[vertice_atual]:
+                nova_dist = dist_atual + peso
+                if nova_dist < distancias[vizinho]:
+                    distancias[vizinho] = nova_dist
+                    anteriores[vizinho] = vertice_atual
+                    heapq.heappush(heap, (nova_dist, vizinho))
+
+        return distancias, anteriores
+
+    def reconstruir_caminho(self, anteriores, destino):
+        caminho = []
+        atual = destino
+        while atual is not None:
+            caminho.append(atual)
+            atual = anteriores[atual]
+        return caminho[::-1]  # Inverter para ficar na ordem correta
+
+
+class Caminho:
+    def __init__(self, grafo):
+        self.grafo = grafo
+        self.caminhos_percorridos = []
+        self.tempo_total = 0
+
+    def percorrer_todos_os_vertices(self, origem):
+        vertices_visitados = set()
+        atual = origem
+
+        while len(vertices_visitados) < len(self.grafo.adjacencias):
+            vertices_visitados.add(atual)
+            distancias, anteriores = self.grafo.dijkstra(atual)
+
+            # Encontrar o vértice não visitado mais próximo
+            proximos = [v for v in distancias if v not in vertices_visitados]
+            if not proximos:
+                break
+            proximo = min(proximos, key=lambda v: distancias[v])
+
+            # Adicionar caminho e tempo
+            caminho = self.grafo.reconstruir_caminho(anteriores, proximo)
+            self.caminhos_percorridos.append((caminho, distancias[proximo]))
+            self.tempo_total += distancias[proximo]
+
+            # Atualizar o vértice atual
+            atual = proximo
+
+    def exibir_caminhos(self):
+        print("Caminhos percorridos:")
+        for caminho, tempo in self.caminhos_percorridos:
+            print(f"Caminho: {' -> '.join(map(str, caminho))}, Tempo: {tempo} minutos")
+        print(f"Tempo total: {self.tempo_total} minutos")
+
+
+# Configurando o grafo
+grafo = Grafo()
+grafo.carregar_arquivo("grafo.txt")
+
+# Inicializando o caminhão
+caminhao = Caminho(grafo)
+caminhao.percorrer_todos_os_vertices(1)
+caminhao.exibir_caminhos()
