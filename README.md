@@ -1,2 +1,2 @@
 # Gerenciamento-de-Lixo
-Projeto para a cadeira de Algoritmos em Grafos 
+Projeto desenvolvido para a cadeira de Algoritmos em Grafos no terceiro semestre do curso de Ciência da Computação na UFCA.
